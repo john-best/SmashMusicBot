@@ -31,7 +31,6 @@ async def update_music_list():
             print(str(new_songs) + " new songs!")
 
             for i in range(new_songs):
-
                 for channel in subscribed_channels:
                     await client.send_message(client.get_channel(channel), "New Song! {} - {}: https://www.youtube.com/watch?v={}".format(new_music_list["sound"][i]["descTxt2En"], new_music_list["sound"][i]["titleEn"], new_music_list["sound"][i]["youtubeID"]))
             music_list = new_music_list
@@ -79,11 +78,24 @@ async def on_message(message):
     if message.content.startswith('!maintheme'):
         await client.send_message(message.channel, "{}: https://www.youtube.com/watch?v={}".format(music_list["maintheme"][0]["titleEn"], music_list["maintheme"][0]["youtubeID"]))
 
+    if message.content.startswith('!help'):
+        description="Commands: `!un/subscribe`, `!latest`, `!find <song title>`, `!maintheme`, `!help`\n[GitHub](https://github.com/john-best/SmashMusicBot)"
+        embed = discord.Embed(description=description, color=0x5bc0de)
+        embed.set_author(name="Smash Ultimate Music Bot", icon_url=client.user.default_avatar_url)
+        await client.send_message(message.channel, embed=embed)
+
+    if message.content.startswith('!list'):
+        text = "```"
+        text += "{}: https://www.youtube.com/watch?v={}\n".format(music_list["maintheme"][0]["titleEn"], music_list["maintheme"][0]["youtubeID"])
+        for song in music_list["sound"]:
+            text += "{} - {}: https://www.youtube.com/watch?v={}\n".format(song["descTxt2En"], song["titleEn"], song["youtubeID"])
+        text += "```"
+        await client.send_message(message.channel, text)
+
+
 @client.event
 async def on_ready():
     await load_music_list()
-    await client.change_presence(
-        game=discord.Game(name='!subscribe for Smash music updates')
-    )
+    await client.change_presence(game=discord.Game(name='!help for Smash Ultimate Music'))
 
 client.run(config.token)
