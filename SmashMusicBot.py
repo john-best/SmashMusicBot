@@ -1,7 +1,7 @@
 import requests
 import discord
 import asyncio
-from config
+import config
 
 MUSIC_LIST_JSON = "https://www.smashbros.com/assets_v2/data/sound.json"
 
@@ -65,4 +65,4 @@ async def on_ready():
         game=discord.Game(name='!subscribe for Smash music updates')
     )
 
-client.run(token)
+client.run(config.token)
