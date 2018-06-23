@@ -44,6 +44,7 @@ async def update_music_list():
 
 @client.event
 async def on_message(message):
+    global music_list
     if message.content.startswith('!subscribe'):
         if message.channel.id not in subscribed_channels:
             subscribed_channels[message.channel.id] = True
@@ -57,6 +58,9 @@ async def on_message(message):
         else:
             subscribed_channels.pop(message.channel.id, None)
             await client.send_message(message.channel, "Channel unsubscribed.")
+
+    if message.content.startswith('!latest'):
+        await client.send_message(message.channel, "{} - {}: https://www.youtube.com/watch?v={}".format(music_list["sound"][0]["descTxt2En"], music_list["sound"][0]["titleEn"], music_list["sound"][0]["youtubeID"]))
 
 @client.event
 async def on_ready():
