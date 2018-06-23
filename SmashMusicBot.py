@@ -62,6 +62,23 @@ async def on_message(message):
     if message.content.startswith('!latest'):
         await client.send_message(message.channel, "{} - {}: https://www.youtube.com/watch?v={}".format(music_list["sound"][0]["descTxt2En"], music_list["sound"][0]["titleEn"], music_list["sound"][0]["youtubeID"]))
 
+    if message.content.startswith('!find'):
+        if len(message.content.split()) > 1:
+            song = ' '.join(message.content.split()[1:])
+
+            for item in music_list["sound"]:
+                if item["titleEn"].lower() == song.lower():
+                    await client.send_message(message.channel, "{} - {}: https://www.youtube.com/watch?v={}".format(item["descTxt2En"], item["titleEn"], item["youtubeID"]))
+                    return
+            
+            await client.send_message(message.channel, "Error: song not found")
+            
+        else:
+            await client.send_message(message.channel, "Error: no input specified")
+    
+    if message.content.startswith('!maintheme'):
+        await client.send_message(message.channel, "{}: https://www.youtube.com/watch?v={}".format(music_list["maintheme"][0]["titleEn"], music_list["maintheme"][0]["youtubeID"]))
+
 @client.event
 async def on_ready():
     await load_music_list()
