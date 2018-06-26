@@ -47,7 +47,6 @@ async def load_news_list():
     global news_list
     r = requests.get(NEWS_LIST_JSON)
     news_list = r.json()
-    news_list = {}
     print('Loaded current news list.')
     client.loop.create_task(update_news_list())
 
