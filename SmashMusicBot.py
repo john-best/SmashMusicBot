@@ -1,14 +1,17 @@
-import requests
-import discord
 import asyncio
+import discord
+import requests
+
 import config
 
 MUSIC_LIST_JSON = "https://www.smashbros.com/assets_v2/data/sound.json"
+NEWS_LIST_JSON = "https://www.smashbros.com/data/bs/en_US/json/en_US.json"
 
 client = discord.Client()
 
 subscribed_channels = {}
 music_list = {}
+news_list = {}
 
 async def load_music_list():
     global music_list
@@ -40,6 +43,44 @@ async def update_music_list():
 
         await asyncio.sleep(3600)
 
+async def load_news_list():
+    global news_list
+    r = requests.get(NEWS_LIST_JSON)
+    news_list = r.json()
+    news_list = {}
+    print('Loaded current news list.')
+    client.loop.create_task(update_news_list())
+
+
+async def update_news_list():
+    global news_list
+    await client.wait_until_ready()
+
+    while not client.is_closed:
+        r = requests.get(NEWS_LIST_JSON)
+        new_news_list = r.json()
+
+        # only one news post per day... music might be the same thing but i have no confirmation on that vs news posts
+        if len(new_news_list) != len(news_list):
+            title = new_news_list[0]["title"]["rendered"]
+            description = new_news_list[0]["acf"]["editor"].replace("<p>", "").replace("<br />", " - ").replace("</p>", "").replace("\n", "")
+
+            if new_news_list[0]["acf"]["link_url"] != "":
+                description += "\n" + new_news_list[0]["acf"]["link_url"]
+
+            embed = discord.Embed(title=title, description=description, color=0x5bc0de)
+
+            if new_news_list[0]["acf"]["image1"]["url"] is not None:
+                image_url = new_news_list[0]["acf"]["image1"]["url"].replace('/413752', 'https://www.smashbros.com')
+                embed.set_image(url=image_url)
+
+            for channel in subscribed_channels:
+                await client.send_message(client.get_channel(channel), embed=embed)
+            news_list = new_news_list
+
+        else:
+            print("New news not found... retrying in 1 hour")
+        await asyncio.sleep(3600)
 
 @client.event
 async def on_message(message):
@@ -96,6 +137,7 @@ async def on_message(message):
 @client.event
 async def on_ready():
     await load_music_list()
-    await client.change_presence(game=discord.Game(name='!help for Smash Ultimate Music'))
+    await load_news_list()
+    await client.change_presence(game=discord.Game(name='!help for Smash Ultimate'))
 
 client.run(config.token)
