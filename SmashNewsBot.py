@@ -121,7 +121,7 @@ async def on_message(message):
     if message.content.startswith('!help'):
         description="Commands: `!un/subscribe`, `!latest`, `!find <song title>`, `!maintheme`, `!help`\n[GitHub](https://github.com/john-best/SmashMusicBot)"
         embed = discord.Embed(description=description, color=0x5bc0de)
-        embed.set_author(name="Smash Ultimate Music Bot", icon_url=client.user.default_avatar_url)
+        embed.set_author(name="Smash Ultimate News Bot", icon_url=client.user.default_avatar_url)
         await client.send_message(message.channel, embed=embed)
 
     if message.content.startswith('!list'):
