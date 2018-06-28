@@ -40,7 +40,6 @@ async def update_music_list():
         
         else:
             print("New music not found... retrying in 1 hour")
-
         await asyncio.sleep(3600)
 
 async def load_news_list():
@@ -61,20 +60,34 @@ async def update_news_list():
 
         # only one news post per day... music might be the same thing but i have no confirmation on that vs news posts
         if len(new_news_list) != len(news_list):
-            title = new_news_list[0]["title"]["rendered"]
-            description = new_news_list[0]["acf"]["editor"].replace("<p>", "").replace("<br />", " - ").replace("</p>", "").replace("\n", "")
 
-            if new_news_list[0]["acf"]["link_url"] != "":
-                description += "\n" + new_news_list[0]["acf"]["link_url"]
+            new_news = len(new_news_list) - len(news_list)
 
-            embed = discord.Embed(title=title, description=description, color=0x5bc0de)
+            for i in range(new_news):
+                title = new_news_list[i]["title"]["rendered"]
+                description = new_news_list[i]["acf"]["editor"].replace("<p>", "").replace("<br />", " - ").replace("</p>", "").replace("\n", "")
 
-            if new_news_list[0]["acf"]["image1"]["url"] is not None:
-                image_url = new_news_list[0]["acf"]["image1"]["url"].replace('/413752', 'https://www.smashbros.com')
-                embed.set_image(url=image_url)
+                if new_news_list[i]["acf"]["link_url"] != "":
+                    description += "\n" + new_news_list[0]["acf"]["link_url"]
 
-            for channel in subscribed_channels:
-                await client.send_message(client.get_channel(channel), embed=embed)
+                if new_news_list[i]["acf"]["image2"]["url"] is not None:
+                    description += "\n" + "More images: "
+                    description += "\n" + new_news_list[i]["acf"]["image2"]["url"].replace('/413752', 'https://www.smashbros.com')
+
+                if new_news_list[i]["acf"]["image3"]["url"] is not None:
+                    description += "\n" + new_news_list[i]["acf"]["image3"]["url"].replace('/413752', 'https://www.smashbros.com')
+                
+                if new_news_list[i]["acf"]["image4"]["url"] is not None:
+                    description += "\n" + new_news_list[i]["acf"]["image4"]["url"].replace('/413752', 'https://www.smashbros.com')
+
+                embed = discord.Embed(title=title, description=description, color=0x5bc0de)
+
+                if new_news_list[i]["acf"]["image1"]["url"] is not None:
+                    image_url = new_news_list[i]["acf"]["image1"]["url"].replace('/413752', 'https://www.smashbros.com')
+                    embed.set_image(url=image_url)
+
+                for channel in subscribed_channels:
+                    await client.send_message(client.get_channel(channel), embed=embed)
             news_list = new_news_list
 
         else:
@@ -98,10 +111,10 @@ async def on_message(message):
             subscribed_channels.pop(message.channel.id, None)
             await client.send_message(message.channel, "Channel unsubscribed.")
 
-    if message.content.startswith('!latest'):
+    if message.content.startswith('!mlatest'):
         await client.send_message(message.channel, "{} - {}: https://www.youtube.com/watch?v={}".format(music_list["sound"][0]["descTxt2En"], music_list["sound"][0]["titleEn"], music_list["sound"][0]["youtubeID"]))
 
-    if message.content.startswith('!find'):
+    if message.content.startswith('!mfind'):
         if len(message.content.split()) > 1:
             song = ' '.join(message.content.split()[1:])
 
@@ -124,7 +137,7 @@ async def on_message(message):
         embed.set_author(name="Smash Ultimate News Bot", icon_url=client.user.default_avatar_url)
         await client.send_message(message.channel, embed=embed)
 
-    if message.content.startswith('!list'):
+    if message.content.startswith('!mlist'):
         text = "```"
         text += "{}: https://www.youtube.com/watch?v={}\n".format(music_list["maintheme"][0]["titleEn"], music_list["maintheme"][0]["youtubeID"])
         for song in music_list["sound"]:
