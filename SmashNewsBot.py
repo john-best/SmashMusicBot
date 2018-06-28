@@ -39,8 +39,8 @@ async def update_music_list():
             music_list = new_music_list
         
         else:
-            print("New music not found... retrying in 1 hour")
-        await asyncio.sleep(3600)
+            print("New music not found... retrying in 30 mins")
+        await asyncio.sleep(1800)
 
 async def load_news_list():
     global news_list
@@ -91,8 +91,8 @@ async def update_news_list():
             news_list = new_news_list
 
         else:
-            print("New news not found... retrying in 1 hour")
-        await asyncio.sleep(3600)
+            print("New news not found... retrying in 30 mins")
+        await asyncio.sleep(1800)
 
 @client.event
 async def on_message(message):
