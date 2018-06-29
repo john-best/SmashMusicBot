@@ -107,6 +107,7 @@ async def update_news_list():
                     image_url = new_news_list[i]["acf"]["image1"]["url"].replace('/413752', 'https://www.smashbros.com')
                     embed.set_image(url=image_url)
 
+                embed.set_footer(text="Posted: " + new_news_list[i]["date_gmt"] + " GMT")
                 for channel in subscribed_channels:
                     await client.send_message(client.get_channel(channel), embed=embed)
             news_list = new_news_list
