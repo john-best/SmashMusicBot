@@ -1,5 +1,7 @@
 import asyncio
 import discord
+import json
+import os.path
 import requests
 
 import config
@@ -7,10 +9,18 @@ import config
 MUSIC_LIST_JSON = "https://www.smashbros.com/assets_v2/data/sound.json"
 NEWS_LIST_JSON = "https://www.smashbros.com/data/bs/en_US/json/en_US.json"
 FIGHTERS_LIST_JSON = "https://www.smashbros.com/assets_v2/data/fighter.json"
+CHANNELS_FILE = "channels.json"
 
 client = discord.Client()
 
-subscribed_channels = {}
+if not os.path.isfile(CHANNELS_FILE):
+    subscribed_channels = {}
+else:
+    with open(CHANNELS_FILE) as f:
+        subscribed_channels = json.load(f)
+
+
+print(subscribed_channels)
 music_list = {}
 news_list = {}
 fighters_list = {}
@@ -118,12 +128,15 @@ async def update_news_list():
 
 @client.event
 async def on_message(message):
-    global music_list
-    global news_list
-    global fighters_list
     if message.content.startswith('!subscribe'):
         if message.channel.id not in subscribed_channels:
             subscribed_channels[message.channel.id] = True
+
+            js = json.dumps(subscribed_channels)
+            f = open(CHANNELS_FILE, "w")
+            f.write(js)
+            f.close()
+
             await client.send_message(message.channel, "Channel subscribed.")
         else:
             await client.send_message(message.channel, "Error: Channel is already subscribed.")
@@ -133,6 +146,12 @@ async def on_message(message):
             await client.send_message(message.channel, "Error: Channel is not subscribed.")
         else:
             subscribed_channels.pop(message.channel.id, None)
+
+            js = json.dumps(subscribed_channels)
+            f = open("channels.json","w")
+            f.write(js)
+            f.close()
+
             await client.send_message(message.channel, "Channel unsubscribed.")
 
     if message.content.startswith('!mlatest'):
