@@ -12,7 +12,6 @@ _A discord bot that simplifies access to Smash Ultimate news and information._
 
 ### What's next? ###
 * More commands! E.g. `!latest` for blog posts, `!char` lookup via name, `!mfind` lookup via composer... etc
-* Database for subscribed channels so restarting the bot doesn't wipe the current list of subscribed channels.
 * Get outsider ideas and PRs to make this bot even better!
 
 ### Running ###
