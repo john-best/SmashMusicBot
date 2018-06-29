@@ -6,12 +6,14 @@ import config
 
 MUSIC_LIST_JSON = "https://www.smashbros.com/assets_v2/data/sound.json"
 NEWS_LIST_JSON = "https://www.smashbros.com/data/bs/en_US/json/en_US.json"
+FIGHTERS_LIST_JSON = "https://www.smashbros.com/assets_v2/data/fighter.json"
 
 client = discord.Client()
 
 subscribed_channels = {}
 music_list = {}
 news_list = {}
+fighters_list = {}
 
 async def load_music_list():
     global music_list
@@ -50,6 +52,26 @@ async def load_news_list():
     client.loop.create_task(update_news_list())
 
 
+async def update_fighters_list():
+    global fighters_list
+    await client.wait_until_ready()
+
+    while not client.is_closed:
+        r = requests.get(FIGHTERS_LIST_JSON)
+
+        # we don't need to send an update because a blog post will (obviously) be made for new characters
+        fighters_list = r.json()
+        print("Updated fighters list.")
+        await asyncio.sleep(1800)
+
+async def load_fighters_list():
+    global fighters_list
+    r = requests.get(FIGHTERS_LIST_JSON)
+    fighters_list = r.json()
+    print('Loaded current fighters list.')
+    client.loop.create_task(update_fighters_list())
+
+
 async def update_news_list():
     global news_list
     await client.wait_until_ready()
@@ -58,7 +80,6 @@ async def update_news_list():
         r = requests.get(NEWS_LIST_JSON)
         new_news_list = r.json()
 
-        # only one news post per day... music might be the same thing but i have no confirmation on that vs news posts
         if len(new_news_list) != len(news_list):
 
             new_news = len(new_news_list) - len(news_list)
@@ -97,6 +118,8 @@ async def update_news_list():
 @client.event
 async def on_message(message):
     global music_list
+    global news_list
+    global fighters_list
     if message.content.startswith('!subscribe'):
         if message.channel.id not in subscribed_channels:
             subscribed_channels[message.channel.id] = True
@@ -132,7 +155,7 @@ async def on_message(message):
         await client.send_message(message.channel, "{}: https://www.youtube.com/watch?v={}".format(music_list["maintheme"][0]["titleEn"], music_list["maintheme"][0]["youtubeID"]))
 
     if message.content.startswith('!help'):
-        description="Commands: `!un/subscribe`, `!latest`, `!find <song title>`, `!maintheme`, `!help`\n[GitHub](https://github.com/john-best/SmashMusicBot)"
+        description="Commands: `!un/subscribe`, `!mlatest`, `!mfind <song title>`, `!maintheme`, `!char <id>`, `!help`\n[GitHub](https://github.com/john-best/SmashMusicBot)"
         embed = discord.Embed(description=description, color=0x5bc0de)
         embed.set_author(name="Smash Ultimate News Bot", icon_url=client.user.default_avatar_url)
         await client.send_message(message.channel, embed=embed)
@@ -145,11 +168,50 @@ async def on_message(message):
         text += "```"
         await client.send_message(message.channel, text)
 
+    if message.content.startswith('!char'):
+        if len(message.content.split()) < 2:
+            await client.send_message(message.channel, "Error: Need id")
+        else:
+            contents = message.content.split()
+            search_id = contents[1]
+            link_id = contents[1]
+            if contents[1].endswith('e') or contents[1].endswith('\'') or contents[1].endswith('ᵋ'):
+                search_id = contents[1][:-1] + '\''
+                link_id = contents[1][:-1] + 'e'
+                
+            if len(search_id) == 1:
+                search_id = '0' + search_id
+                link_id = '0' + link_id
+
+            # these are grouped
+            # pokemon trainer
+            if search_id == "33" or search_id == "34" or search_id == "35":
+                search_id = "33-35"
+                link_id = "33-35"
+
+            # mii fighters
+            if search_id == "51" or search_id == "52" or search_id == "53":
+                search_id = "51-53"
+                link_id = "51-53"
+                
+            for fighter in fighters_list["fighters"]:
+                if fighter["displayNum"] == search_id:
+
+                    title = fighter["displayName"]["en_US"].replace("<br>", "") + "/" + fighter["displayName"]["ja_JP"].replace("<br>", "")
+                    embed = discord.Embed(title=fighter["displayName"]["en_US"].replace("<br>", ""), description="https://www.smashbros.com/en_US/fighter/{}.html".format(link_id), color=int(fighter["color"][1:], 16))
+                    embed.set_image(url="https://www.smashbros.com/assets_v2/img/fighter/thumb_h/{}.png".format(fighter["file"]))
+                    await client.send_message(message.channel, embed=embed)
+                    return
+
+            await client.send_message(message.channel, "Error: unable to find fighter!")
+
+
 
 @client.event
 async def on_ready():
     await load_music_list()
     await load_news_list()
+    await load_fighters_list()
     await client.change_presence(game=discord.Game(name='!help for Smash Ultimate'))
 
 client.run(config.token)
