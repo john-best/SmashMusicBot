@@ -94,34 +94,11 @@ async def update_news_list():
         if len(new_news_list) != len(news_list):
 
             new_news = len(new_news_list) - len(news_list)
+            news_list = new_news_list
 
             for i in range(new_news):
-                title = new_news_list[i]["title"]["rendered"]
-                description = new_news_list[i]["acf"]["editor"].replace("<p>", "").replace("<br />", " - ").replace("</p>", "").replace("\n", "")
-
-                if new_news_list[i]["acf"]["link_url"] != "":
-                    description += "\n" + new_news_list[0]["acf"]["link_url"]
-
-                if new_news_list[i]["acf"]["image2"]["url"] is not None:
-                    description += "\n" + "More images: "
-                    description += "\n" + new_news_list[i]["acf"]["image2"]["url"].replace('/413752', 'https://www.smashbros.com')
-
-                if new_news_list[i]["acf"]["image3"]["url"] is not None:
-                    description += "\n" + new_news_list[i]["acf"]["image3"]["url"].replace('/413752', 'https://www.smashbros.com')
-                
-                if new_news_list[i]["acf"]["image4"]["url"] is not None:
-                    description += "\n" + new_news_list[i]["acf"]["image4"]["url"].replace('/413752', 'https://www.smashbros.com')
-
-                embed = discord.Embed(title=title, description=description, color=0x5bc0de)
-
-                if new_news_list[i]["acf"]["image1"]["url"] is not None:
-                    image_url = new_news_list[i]["acf"]["image1"]["url"].replace('/413752', 'https://www.smashbros.com')
-                    embed.set_image(url=image_url)
-
-                embed.set_footer(text="Posted: " + new_news_list[i]["date_gmt"] + " GMT")
                 for channel in subscribed_channels:
-                    await client.send_message(client.get_channel(channel), embed=embed)
-            news_list = new_news_list
+                    await client.send_message(client.get_channel(channel), embed=generate_news_embed(i))
 
         else:
             print("New news not found... retrying in 30 mins")
@@ -176,7 +153,7 @@ async def on_message(message):
         await client.send_message(message.channel, "{}: https://www.youtube.com/watch?v={}".format(music_list["maintheme"][0]["titleEn"], music_list["maintheme"][0]["youtubeID"]))
 
     if message.content.startswith('!help'):
-        description="Commands: `!un/subscribe`, `!mlatest`, `!mfind <song title>`, `!maintheme`, `!char <id>`, `!help`\n[GitHub](https://github.com/john-best/SmashMusicBot)"
+        description="Commands: `!un/subscribe`, `!mlatest`, `!mfind <song title>`, `!maintheme`, `!char <id>`, `!latest`, `!help`\n[GitHub](https://github.com/john-best/SmashMusicBot)"
         embed = discord.Embed(description=description, color=0x5bc0de)
         embed.set_author(name="Smash Ultimate News Bot", icon_url=client.user.default_avatar_url)
         await client.send_message(message.channel, embed=embed)
@@ -226,7 +203,9 @@ async def on_message(message):
 
             await client.send_message(message.channel, "Error: unable to find fighter!")
 
-
+    if message.content.startswith('!latest'):
+        await client.send_message(message.channel, embed=generate_news_embed(0))
+        
 
 @client.event
 async def on_ready():
@@ -234,6 +213,33 @@ async def on_ready():
     await load_news_list()
     await load_fighters_list()
     await client.change_presence(game=discord.Game(name='!help for Smash Ultimate'))
+
+
+def generate_news_embed(i):
+    title = news_list[i]["title"]["rendered"]
+    description = news_list[i]["acf"]["editor"].replace("<p>", "").replace("<br />", " - ").replace("</p>", "").replace("\n", "")
+
+    if news_list[i]["acf"]["link_url"] != "":
+        description += "\n" + news_list[0]["acf"]["link_url"]
+
+    if news_list[i]["acf"]["image2"]["url"] is not None:
+        description += "\n" + "More images: "
+        description += "\n" + news_list[i]["acf"]["image2"]["url"].replace('/413752', 'https://www.smashbros.com')
+
+    if news_list[i]["acf"]["image3"]["url"] is not None:
+        description += "\n" + news_list[i]["acf"]["image3"]["url"].replace('/413752', 'https://www.smashbros.com')
+    
+    if news_list[i]["acf"]["image4"]["url"] is not None:
+        description += "\n" + news_list[i]["acf"]["image4"]["url"].replace('/413752', 'https://www.smashbros.com')
+
+    embed = discord.Embed(title=title, description=description, color=0x5bc0de)
+
+    if news_list[i]["acf"]["image1"]["url"] is not None:
+        image_url = news_list[i]["acf"]["image1"]["url"].replace('/413752', 'https://www.smashbros.com')
+        embed.set_image(url=image_url)
+
+    embed.set_footer(text="Posted: " + news_list[i]["date_gmt"] + " GMT")
+    return embed
 
 
 while True:
