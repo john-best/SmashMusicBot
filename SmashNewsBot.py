@@ -3,6 +3,7 @@ import discord
 import json
 import os.path
 import requests
+import time
 
 import config
 
@@ -234,4 +235,11 @@ async def on_ready():
     await load_fighters_list()
     await client.change_presence(game=discord.Game(name='!help for Smash Ultimate'))
 
-client.run(config.token)
+
+while True:
+    try:
+        client.loop.run_until_complete(client.start(config.token))
+    except BaseException:
+        time.sleep(5)
+
+#client.run(config.token)
