@@ -115,13 +115,13 @@ async def on_message(message):
             f.write(js)
             f.close()
 
-            await client.send_message(message.channel, "Channel subscribed.")
+            await message.channel.send("Channel subscribed.")
         else:
-            await client.send_message(message.channel, "Error: Channel is already subscribed.")
+            await message.channel.send("Error: Channel is already subscribed.")
     
     if message.content.startswith('!unsubscribe'):
         if message.channel.id not in subscribed_channels:
-            await client.send_message(message.channel, "Error: Channel is not subscribed.")
+            await message.channel.send("Error: Channel is not subscribed.")
         else:
             subscribed_channels.pop(message.channel.id, None)
 
@@ -130,10 +130,10 @@ async def on_message(message):
             f.write(js)
             f.close()
 
-            await client.send_message(message.channel, "Channel unsubscribed.")
+            await message.channel.send("Channel unsubscribed.")
 
     if message.content.startswith('!mlatest'):
-        await client.send_message(message.channel, "{} - {}: https://www.youtube.com/watch?v={}".format(music_list["sound"][0]["descTxt2En"], music_list["sound"][0]["titleEn"], music_list["sound"][0]["youtubeID"]))
+        await message.channel.send("{} - {}: https://www.youtube.com/watch?v={}".format(music_list["sound"][0]["descTxt2En"], music_list["sound"][0]["titleEn"], music_list["sound"][0]["youtubeID"]))
 
     if message.content.startswith('!mfind'):
         if len(message.content.split()) > 1:
@@ -141,22 +141,22 @@ async def on_message(message):
 
             for item in music_list["sound"]:
                 if item["titleEn"].lower() == song.lower():
-                    await client.send_message(message.channel, "{} - {}: https://www.youtube.com/watch?v={}".format(item["descTxt2En"], item["titleEn"], item["youtubeID"]))
-                    return
-            
-            await client.send_message(message.channel, "Error: song not found")
+                    await message.channel.send("{} - {}: https://www.youtube.com/watch?v={}".format(item["descTxt2En"], item["titleEn"], item["youtubeID"]))
+                    return  
+            await message.channel.send("Error: song not found")
             
         else:
-            await client.send_message(message.channel, "Error: no input specified")
+            await message.channel.send("Error: no input specified")
     
     if message.content.startswith('!maintheme'):
-        await client.send_message(message.channel, "{}: https://www.youtube.com/watch?v={}".format(music_list["maintheme"][0]["titleEn"], music_list["maintheme"][0]["youtubeID"]))
+        await message.channel.send("{}: https://www.youtube.com/watch?v={}".format(music_list["maintheme"][0]["titleEn"], music_list["maintheme"][0]["youtubeID"]))
 
     if message.content.startswith('!help'):
         description="Commands: `!un/subscribe`, `!mlatest`, `!mfind <song title>`, `!maintheme`, `!char <id>`, `!latest`, `!help`\n[GitHub](https://github.com/john-best/SmashMusicBot)"
         embed = discord.Embed(description=description, color=0x5bc0de)
         embed.set_author(name="Smash Ultimate News Bot", icon_url=client.user.default_avatar_url)
-        await client.send_message(message.channel, embed=embed)
+
+        await message.channel.send(embed=embed)
 
     if message.content.startswith('!mlist'):
         text = "```"
@@ -164,11 +164,11 @@ async def on_message(message):
         for song in music_list["sound"]:
             text += "{} - {}: https://www.youtube.com/watch?v={}\n".format(song["descTxt2En"], song["titleEn"], song["youtubeID"])
         text += "```"
-        await client.send_message(message.channel, text)
+        await message.channel.send(text)
 
     if message.content.startswith('!char'):
         if len(message.content.split()) < 2:
-            await client.send_message(message.channel, "Error: Need id")
+            await message.channel.send("Error: Need id")
         else:
             contents = message.content.split()
             search_id = contents[1]
@@ -198,21 +198,28 @@ async def on_message(message):
                     title = fighter["displayName"]["en_US"].replace("<br>", "") + "/" + fighter["displayName"]["ja_JP"].replace("<br>", "")
                     embed = discord.Embed(title=fighter["displayName"]["en_US"].replace("<br>", ""), description="https://www.smashbros.com/en_US/fighter/{}.html".format(link_id), color=int(fighter["color"][1:], 16))
                     embed.set_image(url="https://www.smashbros.com/assets_v2/img/fighter/thumb_h/{}.png".format(fighter["file"]))
-                    await client.send_message(message.channel, embed=embed)
+                    await message.channel.send(embed=embed)
                     return
-
-            await client.send_message(message.channel, "Error: unable to find fighter!")
+            await message.channel.send("Error: unable to find fighter!")
 
     if message.content.startswith('!latest'):
-        await client.send_message(message.channel, embed=generate_news_embed(0))
+        await message.channel.send(embed=generate_news_embed(0))
+        
         
 
 @client.event
 async def on_ready():
-    await load_music_list()
-    await load_news_list()
-    await load_fighters_list()
-    await client.change_presence(game=discord.Game(name='!help for Smash Ultimate'))
+
+    if music_list == {}:
+        await load_music_list()
+
+    if news_list == {}:
+        await load_news_list()
+    
+    if fighters_list == {}:
+        await load_fighters_list()
+        
+    await client.change_presence(activity=discord.Game(name='!help for Smash Ultimate'))
 
 
 def generate_news_embed(i):
@@ -241,11 +248,4 @@ def generate_news_embed(i):
     embed.set_footer(text="Posted: " + news_list[i]["date_gmt"] + " GMT")
     return embed
 
-
-while True:
-    try:
-        client.loop.run_until_complete(client.start(config.token))
-    except BaseException:
-        time.sleep(5)
-
-#client.run(config.token)
+client.run(config.token, reconnect=True)
