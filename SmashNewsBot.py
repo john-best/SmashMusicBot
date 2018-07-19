@@ -38,7 +38,7 @@ async def update_music_list():
     global music_list
     await client.wait_until_ready()
 
-    while not client.is_closed:
+    while not client.is_closed():
         r = requests.get(MUSIC_LIST_JSON)
         new_music_list = r.json()
 
@@ -48,7 +48,7 @@ async def update_music_list():
 
             for i in range(new_songs):
                 for channel in subscribed_channels:
-                    await client.send_message(client.get_channel(channel), "New Song! {} - {}: https://www.youtube.com/watch?v={}".format(new_music_list["sound"][i]["descTxt2En"], new_music_list["sound"][i]["titleEn"], new_music_list["sound"][i]["youtubeID"]))
+                    await client.get_channel(channel).send("New Song! {} - {}: https://www.youtube.com/watch?v={}".format(new_music_list["sound"][i]["descTxt2En"], new_music_list["sound"][i]["titleEn"], new_music_list["sound"][i]["youtubeID"]))
             music_list = new_music_list
         
         else:
@@ -67,7 +67,7 @@ async def update_fighters_list():
     global fighters_list
     await client.wait_until_ready()
 
-    while not client.is_closed:
+    while not client.is_closed():
         r = requests.get(FIGHTERS_LIST_JSON)
 
         # we don't need to send an update because a blog post will (obviously) be made for new characters
@@ -87,7 +87,7 @@ async def update_news_list():
     global news_list
     await client.wait_until_ready()
 
-    while not client.is_closed:
+    while not client.is_closed():
         r = requests.get(NEWS_LIST_JSON)
         new_news_list = r.json()
 
@@ -98,7 +98,7 @@ async def update_news_list():
 
             for i in range(new_news):
                 for channel in subscribed_channels:
-                    await client.send_message(client.get_channel(channel), embed=generate_news_embed(i))
+                    await client.get_channel(channel).send(embed=generate_news_embed(i))
 
         else:
             print("New news not found... retrying in 30 mins")
