@@ -48,7 +48,7 @@ async def update_music_list():
 
             for i in range(new_songs):
                 for channel in subscribed_channels:
-                    await client.get_channel(channel).send("New Song! {} - {}: https://www.youtube.com/watch?v={}".format(new_music_list["sound"][i]["descTxt2En"], new_music_list["sound"][i]["titleEn"], new_music_list["sound"][i]["youtubeID"]))
+                    await client.get_channel(int(channel)).send("New Song! {} - {}: https://www.youtube.com/watch?v={}".format(new_music_list["sound"][i]["descTxt2En"], new_music_list["sound"][i]["titleEn"], new_music_list["sound"][i]["youtubeID"]))
             music_list = new_music_list
         
         else:
@@ -98,7 +98,7 @@ async def update_news_list():
 
             for i in range(new_news):
                 for channel in subscribed_channels:
-                    await client.get_channel(channel).send(embed=generate_news_embed(i))
+                    await client.get_channel(int(channel)).send(embed=generate_news_embed(i))
 
         else:
             print("New news not found... retrying in 30 mins")
@@ -107,8 +107,9 @@ async def update_news_list():
 @client.event
 async def on_message(message):
     if message.content.startswith('!subscribe'):
-        if message.channel.id not in subscribed_channels:
-            subscribed_channels[message.channel.id] = True
+
+        if str(message.channel.id) not in subscribed_channels:
+            subscribed_channels[str(message.channel.id)] = True
 
             js = json.dumps(subscribed_channels)
             f = open(CHANNELS_FILE, "w")
@@ -120,10 +121,10 @@ async def on_message(message):
             await message.channel.send("Error: Channel is already subscribed.")
     
     if message.content.startswith('!unsubscribe'):
-        if message.channel.id not in subscribed_channels:
+        if str(message.channel.id) not in subscribed_channels:
             await message.channel.send("Error: Channel is not subscribed.")
         else:
-            subscribed_channels.pop(message.channel.id, None)
+            subscribed_channels.pop(str(message.channel.id), None)
 
             js = json.dumps(subscribed_channels)
             f = open("channels.json","w")
